@@ -218,8 +218,8 @@ namespace Final_Project
         private void btnAns_Click(object sender, EventArgs e)
         {
             List<History> lsHis = frmHistory.GetAllHistory();
-            txtNhap.Text = lsHis[lsHis.Count - 1].Intput;
-            
+            txtNhap.Text = lsHis[lsHis.Count - 1].Output;
+           
         }
     }
 }
