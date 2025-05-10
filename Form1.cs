@@ -136,7 +136,14 @@ namespace Final_Project
 
         private void btnPercent_Click(object sender, EventArgs e)
         {
-            txtNhap.Text += " % ";
+            float percent = 0;
+            if (txtXuat.Text.Length > 0)
+            {
+                percent = float.Parse(txtXuat.Text);
+                percent = percent /100;
+                txtXuat.Text = percent.ToString();
+
+            }  
         }
 
         private void btnDel_Click(object sender, EventArgs e)
@@ -210,7 +217,9 @@ namespace Final_Project
 
         private void btnAns_Click(object sender, EventArgs e)
         {
-            txtNhap.Text = frmHistory.HistorySorted()[0].Intput;
+            List<History> lsHis = frmHistory.GetAllHistory();
+            txtNhap.Text = lsHis[lsHis.Count - 1].Intput;
+            
         }
     }
 }

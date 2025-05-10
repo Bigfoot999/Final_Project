@@ -53,6 +53,12 @@ namespace Final_Project
             // đăng kí sự kiện
             dataGridViewHistory.CellClick += dataGridViewHistory_CellClick;
         }
+
+        public List<History> GetAllHistory()
+        {
+            return repository.GetAllHistory();
+        }
+
         //Ứng dụng hàm Exchange sort
         public List<History> HistorySorted()
         {
