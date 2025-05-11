@@ -24,6 +24,7 @@ namespace Final_Project
             InitializeComponent();
             repository = new HistoryRepository();
             frmHistory = new frmHistory(this);
+            KeyPreview = true;
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
@@ -220,6 +221,23 @@ namespace Final_Project
             List<History> lsHis = frmHistory.GetAllHistory();
             txtNhap.Text = lsHis[lsHis.Count - 1].Output;
            
+        }
+
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                btnEqual.PerformClick();
+            }
+            else if (e.KeyCode == Keys.Back)
+            {
+                btnDel.PerformClick();
+            }
+            else if(e.KeyCode == Keys.Escape)
+            {
+                this.Close();
+            }    
+
         }
     }
 }

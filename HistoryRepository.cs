@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using ClosedXML.Excel;
 using Final_Project;
@@ -8,44 +9,14 @@ using Final_Project;
 
 public class HistoryRepository
 {
+
     private const string ExcelFilePath = "History.xlsx";
     private const string WorksheetName = "History";
 
-    // Serialize danh sách Phép tính thành JSON byte array
-    private static byte[] SerializeListHistory(List<History> his)
+    // Ghi danh sách History vào Excel
+    public string SaveToExcel(List<History> histories)
     {
-        return JsonSerializer.SerializeToUtf8Bytes(his);
-    }
-
-    // Serialize một History thành JSON byte array
-    private static byte[] SerializeHistory(History history)
-    {
-        List<History> tempList = new List<History> { history };
-        return JsonSerializer.SerializeToUtf8Bytes(tempList);
-    }
-
-    // Deserialize JSON byte array thành danh sách History
-    private static List<History> DeserializeHistory(byte[] data)
-    {
-        if (data == null || data.Length == 0)
-        {
-            return new List<History>(); // Trả về danh sách rỗng nếu dữ liệu đầu vào không hợp lệ
-        }
-
-        List<History> tasks = JsonSerializer.Deserialize<List<History>>(data);
-
-        if (tasks == null)
-        {
-            return new List<History>(); // Trả về danh sách rỗng nếu quá trình giải tuần tự hóa thất bại
-        }
-
-        return tasks;
-    }
-
-    // Ghi danh sách phép tính vào Excel (Thêm mới, không ghi đè)
-    public String SaveToExcel(List<History> his)
-    {
-        if (his == null || his.Count == 0)
+        if (histories == null || histories.Count == 0)
         {
             return "Not found";
         }
@@ -55,139 +26,157 @@ public class HistoryRepository
 
         try
         {
-            int lastRow = 0;
-            IXLRow lastRowUsed = worksheet.LastRowUsed();
-            if (lastRowUsed != null)
+            // Tìm dòng cuối cùng được sử dụng
+            int lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 0;
+
+            // Nếu file mới, thêm tiêu đề
+            if (lastRow == 0)
             {
-                lastRow = lastRowUsed.RowNumber();
+                worksheet.Cell(1, 1).Value = "Intput";
+                worksheet.Cell(1, 2).Value = "Output";
+                worksheet.Cell(1, 3).Value = "TimeEvent";
+                lastRow = 1;
             }
 
-            byte[] serializedData = SerializeListHistory(his);
-            worksheet.Cell(lastRow + 1, 1).Value = Convert.ToBase64String(serializedData);
+            // Ghi từng History vào các dòng tiếp theo
+            foreach (History history in histories)
+            {
+                lastRow++;
+                worksheet.Cell(lastRow, 1).Value = history.Intput;
+                worksheet.Cell(lastRow, 2).Value = history.Output;
+                worksheet.Cell(lastRow, 3).Value = history.TimeEvent;
+            }
+
             workbook.SaveAs(ExcelFilePath);
             return "Save success";
         }
         catch (Exception ex)
         {
-            throw new IOException($"Lỗi khi lưu danh sách task dùng vào Excel: {ex.Message}", ex);
+            throw new IOException($"Lỗi khi lưu danh sách History vào Excel: {ex.Message}", ex);
+        }
+        finally
+        {
+            workbook?.Dispose();
         }
     }
 
-
     // Ghi một History vào Excel
-    public String SaveToExcel(History newHistory)
+    public string SaveToExcel(History history)
     {
-        if (newHistory == null) throw new ArgumentNullException(nameof(newHistory));
-        List<History> tempList = GetAllHistory();
-        
+        if (history == null)
+        {
+            throw new ArgumentNullException(nameof(history));
+        }
+
         XLWorkbook workbook = LoadOrCreateWorkbook();
         IXLWorksheet worksheet = GetOrCreateWorksheet(workbook);
 
         try
         {
+            // Tìm dòng cuối cùng được sử dụng
             int lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 0;
-            byte[] serializedData = SerializeHistory(newHistory);
-            worksheet.Cell(lastRow + 1, 1).Value = Convert.ToBase64String(serializedData);
+
+            // Nếu file mới, thêm tiêu đề
+            if (lastRow == 0)
+            {
+                worksheet.Cell(1, 1).Value = "Intput";
+                worksheet.Cell(1, 2).Value = "Output";
+                worksheet.Cell(1, 3).Value = "TimeEvent";
+                lastRow = 1;
+            }
+
+            // Ghi History vào dòng tiếp theo
+            lastRow++;
+            worksheet.Cell(lastRow, 1).Value = history.Intput;
+            worksheet.Cell(lastRow, 2).Value = history.Output;
+            worksheet.Cell(lastRow, 3).Value = history.TimeEvent;
+
             workbook.SaveAs(ExcelFilePath);
             return "Save success";
         }
         catch (Exception ex)
         {
-            throw new IOException($"Lỗi khi lưu người dùng vào Excel: {ex.Message}", ex);
+            throw new IOException($"Lỗi khi lưu History vào Excel: {ex.Message}", ex);
+        }
+        finally
+        {
+            workbook?.Dispose();
         }
     }
-    private XLWorkbook LoadOrCreateWorkbook()
-    {
-        // Kiểm tra xem tệp Excel có tồn tại hay không
-        if (File.Exists(ExcelFilePath))
-        {
-            // Nếu tệp tồn tại, tải workbook từ đường dẫn ExcelFilePath
-            return new XLWorkbook(ExcelFilePath);
-        }
-        else
-        {
-            // Nếu tệp không tồn tại, tạo một workbook mới
-            return new XLWorkbook();
-        }
 
-    }
     // Đọc danh sách History từ Excel
     public List<History> GetAllHistory()
     {
-        if (!File.Exists(ExcelFilePath)) return new List<History>();
+        if (!File.Exists(ExcelFilePath))
+        {
+            return new List<History>();
+        }
 
         XLWorkbook workbook = null;
         try
         {
             workbook = new XLWorkbook(ExcelFilePath);
-            IXLWorksheet worksheet = workbook.Worksheet("History");
-            List<History> allHistory = new List<History>();
+            IXLWorksheet worksheet = workbook.Worksheet(WorksheetName);
+            List<History> histories = new List<History>();
 
-            foreach (IXLRow row in worksheet.RowsUsed())
+            // Bắt đầu từ dòng thứ 2 để bỏ qua tiêu đề
+            foreach (IXLRow row in worksheet.RowsUsed().Skip(1))
             {
-                //if (row.RowNumber() == 1) continue; // Bỏ qua dòng tiêu đề
-                string base64Data = row.Cell(1).GetString();
-                if (base64Data != "")
+                // Đọc các giá trị từ cột
+                string intput = row.Cell(1).GetString();
+                string output = row.Cell(2).GetString();
+                DateTime timeEvent;
+                bool isValidDate = row.Cell(3).TryGetValue(out timeEvent);
+
+                // Chỉ thêm nếu dữ liệu hợp lệ
+                if (!string.IsNullOrEmpty(intput) && isValidDate)
                 {
-                    byte[] serializedData = Convert.FromBase64String(base64Data);
-                    List<History> deserializedHistory = DeserializeHistory(serializedData);
-                    for (int i = 0; i < deserializedHistory.Count; i++)
-                        allHistory.Add(deserializedHistory[i]);
+                    histories.Add(new History
+                    {
+                        Intput = intput,
+                        Output = output,
+                        TimeEvent = timeEvent
+                    });
                 }
             }
-            return allHistory;
+
+            // Sắp xếp theo TimeEvent (giảm dần) dựa trên IComparable
+            histories.Sort();
+            return histories;
+        }
+        catch (Exception ex)
+        {
+            throw new IOException($"Lỗi khi đọc History từ Excel: {ex.Message}", ex);
         }
         finally
         {
-            if (workbook != null) workbook.Dispose();  //đóng file
+            workbook?.Dispose();
         }
     }
 
-   
-    
+    //Load hoặc tạo mới workbook
+    private XLWorkbook LoadOrCreateWorkbook()
+    {
+        if (File.Exists(ExcelFilePath))
+        {
+            return new XLWorkbook(ExcelFilePath);
+        }
+        return new XLWorkbook();
+    }
 
-    
-
-    // Helper: Load hoặc tạo mới workbook
+    //Lấy hoặc tạo worksheet
     private IXLWorksheet GetOrCreateWorksheet(XLWorkbook workbook)
     {
-        IXLWorksheet foundWorksheet = null;
-
         foreach (var ws in workbook.Worksheets)
         {
             if (ws.Name == WorksheetName)
             {
-                foundWorksheet = ws;
-                break;
+                return ws;
             }
         }
-
-        if (foundWorksheet == null)
-        {
-            foundWorksheet = workbook.Worksheets.Add(WorksheetName);
-        }
-
-        return foundWorksheet;
+        return workbook.Worksheets.Add(WorksheetName);
     }
 
-    
-
-    public List<History> GetHistoryAround3Day(DateTime date)
-    {
-        List<History> his = GetAllHistory();
-        List<History> temp = new List<History>();
-        DateTime dateTimeNow = DateTime.Now;
-        foreach (History h in his)
-        {
-            TimeSpan difference = dateTimeNow - date;
-            if ((int)difference.TotalDays  <= 3)
-            {
-                temp.Add(h);
-            }
-        }
-        return temp;
-    }
-  
 }
 
 
