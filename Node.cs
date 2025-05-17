@@ -8,15 +8,13 @@ namespace TestConsoleCode
 {
     public class Node
     {
-        public string Value { get; set; }  // Giá trị của node (số hoặc toán tử)
-        public Node Left { get; set; }     // Node con trái
-        public Node Right { get; set; }    // Node con phải
+        public string Value { get; set; }
+        public Node Left { get; set; }
+        public Node Right { get; set; }
 
         public Node(string value)
         {
-            this.Value = value;
-            Left = null;
-            Right = null;
+            Value = value;
         }
     }
 }

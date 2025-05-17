@@ -270,7 +270,7 @@
             this.txtNhap.Size = new System.Drawing.Size(318, 63);
             this.txtNhap.TabIndex = 1;
             this.txtNhap.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtNhap.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+            //this.txtNhap.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             this.txtNhap.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtNhap_KeyPress);
             // 
             // txtXuat
@@ -283,7 +283,7 @@
             this.txtXuat.Size = new System.Drawing.Size(318, 63);
             this.txtXuat.TabIndex = 1;
             this.txtXuat.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtXuat.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+            //this.txtXuat.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
             // btnHistory
             // 
