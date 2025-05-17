@@ -192,8 +192,8 @@ namespace TestConsoleCode
                 return cachedResult;
 
             ValidateExpression(expression);
-            var postfix = InfixToPostfix(expression);
-            var root = BuildTree(postfix);
+            string[] postfix = InfixToPostfix(expression);
+            Node root = BuildTree(postfix);
             double result = Evaluate(root);
             _expressionCache[expression] = result;
             return result;
